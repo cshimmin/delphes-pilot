@@ -44,7 +44,7 @@ if [ ! -e "$input_file" ]; then
 fi
 
 if [ -z "$output_path" ]; then
-	output_path=$(dirname $input_file)
+	output_path=/gdata/atlas/$(whoami)
 	echo "No output path provided, using $output_path"
 fi
 
