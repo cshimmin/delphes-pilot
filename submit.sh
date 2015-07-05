@@ -13,12 +13,11 @@ show_help() {
 	echo "  -t TAG_NAME     A prefix tag for output files (e.g. <TAG_NAME>_delphes.root)."
 	echo "  -c N_CORES      Number of cores to request per job. (Default: $ncores)"
 	echo "  -p PARTITION    The slurm partition to submit to. (Default: $partition)"
-	echo "  -r              Recursively find unweighted_events.lhe(.gz) files in the given directory."
 	echo "  -q              Squelch slurm logs."
 }
 
 # parse CLI
-while getopts ":h?t:c:p:rq" opt; do
+while getopts ":h?t:c:p:q" opt; do
     case "$opt" in
     h)  show_help
         exit 0
@@ -28,8 +27,6 @@ while getopts ":h?t:c:p:rq" opt; do
     c)  ncores=$OPTARG
         ;;
     p)  partition=$OPTARG
-        ;;
-    r)  recurse=1
         ;;
     q)  quiet=1
         ;;
@@ -46,23 +43,12 @@ while getopts ":h?t:c:p:rq" opt; do
     esac
 done
 
-# shift to arguments to list of input files
-shift $((OPTIND-1))
-
-if [ $# -lt 1 ]; then
-	echo "No input files provided! Abort." >&2
-	show_help
-	exit 1
-fi
-
-if [ "$recurse" == "0" ]; then
-	input_files=$@
-else
-	input_files=$(find $1 -regex ".*unweighted_events\.lhe\(\.gz\)?")
-fi
+input_file=$1
+total_jobs=$2
+output_dir=$3
 
 # add a tag to the input filename, if requested.
-output_name=delphes.root
+output_name=delphes
 if [ ! -z "$tag" ]; then
 	output_name=${tag}_${output_name}
 fi
@@ -74,8 +60,34 @@ if [ "$quiet" == "1" ]; then
 	SLURM_OPTS+=" -o /dev/null"
 fi
 
-# schedule a job for each input file
-for input_file in $input_files; do
-	echo "Submitting job for $input_file"
-	sbatch $SLURM_OPTS ./run.sh -n $output_name $input_file
+#madgraph gridpacks 
+run="0"
+while [ $run -lt $total_jobs ] 
+do 
+
+    sbatch $SLURM_OPTS ./madgraph.sh -r $run $input_file $output_dir
+    run=$[$run+1]
+    
 done
+
+user=$(whoami)
+
+while [[ -n $(squeue -u $user -t PD,R,CG -h -o %t) ]]
+do
+    echo "Waiting for madgraph jobs to finish"
+    sleep 5
+done
+
+sleep 10
+
+# schedule a job f	or each run
+delphes_run="0"	
+while [ $delphes_run -lt $total_jobs ]
+do	
+    	
+    input=${output_dir}/run_test_${delphes_run}/unweighted_events.lhe.gz
+    sbatch $SLURM_OPTS ./run.sh -n ${output_name}.root -r $delphes_run -o ${output_dir}/run_test_${delphes_run} $input
+    delphes_run=$[$delphes_run+1]
+    
+done
+
