@@ -105,5 +105,5 @@ for input_file in $input_files; do
 		continue
 	fi
 	echo "Submitting job for $input_file"
-	sbatch $SLURM_OPTS ./run.sh $RUN_OPTS $input_file
+	sbatch $SLURM_OPTS ./run.sh -s $idx $RUN_OPTS $input_file
 done
