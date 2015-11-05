@@ -3,16 +3,19 @@
 show_help() {
 	echo "Setup staging area and run pythia/delphes in isolation."
 	echo "Usage: $0 [options] input_file"
+	echo "  -s SEED           The random seed to set in Delphes"
 	echo "  -o OUTPUT_PATH    The destination path for output file. (Default: same path as input file)"
 	echo "  -n OUTPUT_NAME    The output filename. (Default: based on input_file name)"
 	echo "  -t OUTPUT_TAG     A prefix tag for the output filename."
 	echo "  -d DELPHES_CARD   Path to the desired delphes card to run."
 }
 
-while getopts ":h?o:n:t:d:" opt; do
+while getopts ":h?s:o:n:t:d:" opt; do
     case "$opt" in
     h) show_help
        exit 0
+       ;;
+    s) seed=$OPTARG
        ;;
     o) output_path=$OPTARG
        ;;
@@ -101,7 +104,7 @@ fi
 
 # setup the working directory for pythia and delphes to run in
 echo "Staging in $stage_path"
-./scripts/stage.sh $input_file $stage_path $delphes_card
+./scripts/stage.sh $input_file $stage_path $delphes_card $seed
 stage_code=$?
 
 if [ $stage_code -ne 0 ]; then

@@ -96,7 +96,14 @@ if [ ! -z "$tag" ]; then
 fi
 
 # schedule a job for each input file
+idx=0
 for input_file in $input_files; do
+	idx=$((idx+1))
+	outfile=$(get_output_file $input_file $tag)
+	if [ $skip_exists -ne 0 ] && [ -e "$outfile" ]; then
+		echo "Skipping $outfile"
+		continue
+	fi
 	echo "Submitting job for $input_file"
 	sbatch $SLURM_OPTS ./run.sh $RUN_OPTS $input_file
 done

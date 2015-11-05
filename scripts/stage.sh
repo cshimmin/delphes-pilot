@@ -5,6 +5,8 @@ stage_path=$2
 
 delphes_card=$3
 
+seed=$4
+
 mkdir -p $stage_path/run &&
 cp $input_file $stage_path/run/unweighted_events.lhe.gz &&
 cp -r Cards/ $stage_path/ &&
@@ -19,6 +21,11 @@ fi
 if [ ! -z "$delphes_card" ]; then
 	echo "Copying custom delphes_card.dat from $delphes_card"
 	cp $delphes_card $stage_path/Cards/delphes_card.dat
+fi
+
+if [ ! -z "$seed" ]; then
+	echo "Setting RandomSeed=$seed"
+	echo "set RandomSeed $seed" >> $stage_path/Cards/delphes_card.dat
 fi
 
 exit $?
