@@ -6,6 +6,7 @@ quiet=1
 recurse=0
 partition=atlas_all
 tlimit=30
+skip_exists=0
 
 show_help() {
 	echo "Submit pythia/delphes jobs to the slurm cluster."
@@ -18,11 +19,12 @@ show_help() {
 	echo "  -c N_CORES      Number of cores to request per job. (Default: $ncores)"
 	echo "  -p PARTITION    The slurm partition to submit to. (Default: $partition)"
 	echo "  -l TLIMIT       The time limit (in minutes). (Default: $tlimit)"
+	echo "  -s              Skip job if output file exists."
 	echo "  -v              Don't squelch slurm logs."
 }
 
 # parse CLI
-while getopts ":h?rm:d:t:c:p:l:v" opt; do
+while getopts ":h?rm:d:t:c:p:l:sv" opt; do
     case "$opt" in
     h)  show_help
         exit 0
@@ -40,6 +42,8 @@ while getopts ":h?rm:d:t:c:p:l:v" opt; do
     p)  partition=$OPTARG
         ;;
     l)  tlimit=$OPTARG
+        ;;
+    s)  skip_exists=1
         ;;
     v)  quiet=0
         ;;
