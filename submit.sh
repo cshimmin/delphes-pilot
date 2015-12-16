@@ -99,6 +99,30 @@ if [ ! -z "$tag" ]; then
 	RUN_OPTS+=" -t $tag"
 fi
 
+get_output_file() {
+	infile_file=$1;
+	tag=$2;
+
+	file_type=$(basename $input_file);
+	file_type=${file_type%%.*};
+
+	if [ "$file_type" == "sherpa_events" ]; then
+		output_name=$(basename $input_file);
+		output_name=${output_name%.hepmc*}
+		output_name=${output_name#*events}
+	else
+		output_name=$(basename $input_file);
+		output_name=${output_name%.lhe*}
+		output_name=${output_name#*events}
+	fi
+	output_name="delphes${output_name}.root"
+	if [ ! -z "$tag" ]; then
+		output_name="${tag}_${output_name}"
+	fi
+
+	echo $(dirname $input_file)/$output_name;
+}
+
 # schedule a job for each input file
 idx=0
 for input_file in $input_files; do
