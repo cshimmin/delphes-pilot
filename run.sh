@@ -85,6 +85,50 @@ clean_stage() {
 }
 
 
+file_type=$(basename $input_file)
+file_type=${file_type%%.*}
+
+if [ "$file_type" == "sherpa_events" ]; then
+	echo "doing sherpa input!"
+
+	output_name=$(basename $input_file)
+	output_name=${output_name%.hepmc*}
+	output_name=${output_name#*events}
+	output_name="delphes${output_name}.root"
+	if [ ! -z "$output_tag" ]; then
+		output_name="${output_tag}_${output_name}"
+	fi
+
+	mkdir -p $stage_path/Cards
+	echo "Created staging area at $stage_path"
+	cp $input_file $stage_path/
+	cp $delphes_card $stage_path/Cards/delphes_card.dat
+	pushd $stage_path
+
+	if [ ! -z "$seed" ]; then
+		echo "set RandomSeed $seed" >> Cards/delphes_card.dat
+	fi
+	echo "Running delphes!"
+	zcat $(basename $input_file) | $DELPHES_DIR/DelphesHepMC Cards/delphes_card.dat delphes.root -
+	delphes_code=$?
+	popd
+
+	if [ $delphes_code -ne 0 ]; then
+		echo "Error processing delphes! return code=${delphes_code}" >&2
+		clean_stage
+		exit $delphes_code
+	fi
+
+	echo "cp $stage_path/delphes.root $output_path/$output_name"
+	cp $stage_path/delphes.root $output_path/$output_name
+
+	echo "cp $stage_path/Cards/delphes_card.dat $output_path/${output_name}.card"
+	cp $stage_path/Cards/delphes_card.dat $output_path/${output_name}.card
+
+	clean_stage
+	exit 0
+fi
+
 if [ -z "$output_name" ]; then
 	output_name=$(basename $input_file)
 	output_name=${output_name%.lhe*}
