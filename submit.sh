@@ -74,7 +74,7 @@ if [ "$recurse" == "0" ]; then
 else
 	search_str=".*\(unweighted_events\|sherpa_events\)\(\._.*\)?\.\(lhe\|hepmc2g\)\(\.gz\)?"
 	if [ -z "$max_job" ]; then
-		input_files=$(find -L $1 -regex $search_str)
+		input_files=$(find -L $1 -regex $search_str | sort)
 	else
 		input_files=$(find -L $1 -regex $search_str | sort | head -n $max_job)
 	fi
